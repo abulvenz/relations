@@ -2,26 +2,16 @@
 
 import m from 'mithril';
 import relations, { collection, relation, relationTypes } from './relations';
-import { img, li, ul, pre, span } from './tags';
-
-
-const a = () => {
-};
-
-const b = new Proxy(a, {
-    apply(target, thisArg, args) {
-        console.log('he')
-    }
-})
-
-console.log(b())
-
+import { img, li, ul, pre, span, h1, h3 } from './tags';
 
 const S = {
-    users: [],
+    users: [{
+        name:'Helgo',
+        wasBornIn:'Land'
+    }],
     groups: [],
     locations: [],
-    cities: [],
+    cities: [{name:'Land'}],
 };
 
 const M = {
@@ -30,9 +20,6 @@ const M = {
     locations: collection(S.locations, { idField: 'name' }),
     cities: collection(S.cities, { idField: 'name' })
 };
-
-// 1 user can be member of multiple groups
-//relation(M.users, '', M.groups)
 
 // Read as: each user was born in exactly one city
 M.users.addRelation('wasBornIn', relationTypes.ONE_TO_ONE, M.cities);
@@ -52,6 +39,7 @@ M.users.addRelation('isInGroups', relationTypes.N_TO_M, M.groups, 'contains.name
 // Add users
 M.users.add({ name: 'Berta' });
 M.users.add({ name: 'Anton' });
+M.users.add({ name: 'Tillmann' });
 
 // Add cities
 M.cities.add({ name: 'Kiew' });
@@ -61,13 +49,7 @@ M.cities.add({ name: 'Curacao' });
 
 M.users.get('Anton').wasBornIn = 'Kiew';
 M.users.get('Berta').wasBornIn = 'Kiew';
-
-console.log('Result',M.users.filterByProperty('wasBornIn.name','Kiew').map(f=>f()))
-
-console.log(S)
-
-
-console.log(M.users.get('Berta').wasBornIn)
+M.users.get('Tillmann').wasBornIn = 'Curacao';
 
 relations.use(M.users.get('Anton').wasBornIn, city => {
     console.log(city.name);
@@ -79,16 +61,25 @@ M.groups.get('Spökes').wasCreatedBy = 'Anton'
 
 m.mount(document.body, {
     view: vnode => [
+        h3('Users'),
         ul(
-     //       M.users.map(user => li(user.name, ' was born in ', JSON.stringify(user.wasBornIn())))
+            M.users.map(user => li(user.name, ' was born in ', JSON.stringify(user.wasBornIn.name), ' together with ', user.wasBornIn.isBirthplaceOf.filter(f=>f.name!==user.name).map(f=>f.name).join(",")||'nobody else'))
         ),
+        h3('Cities'),
         ul(
-            M.cities.map(city => li(city.name, ' is birthplace of ', JSON.stringify(city.isBirthplaceOf.map(f=>f()))))
+            M.cities.map(city => li(city.name, ' is birthplace of ', JSON.stringify(city.isBirthplaceOf.map(f=>f.name).join(", "))))
         ),
+        h3('Groups'),
         ul(
-      //      M.groups.map(group => li(group.name, ' was created by ', JSON.stringify(group.wasCreatedBy())))
+            M.groups.map(group => li(group.name, ' was created by ', JSON.stringify(group.wasCreatedBy.name)))
         ),
+        h3('Locations'),
+        ul(
+            M.locations.map(location => li(location.name, '  ', JSON.stringify(location())))
+        ),
+        h3('Special'),
         span(relations.use(M.groups.get('Spökes'), group => ['"', group.name, '" was created by someone from "', group.wasCreatedBy.wasBornIn.name, '"'])),
+        h3('Debug'),
         pre(JSON.stringify(S, null, 2))
     ]
 });

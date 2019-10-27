@@ -33,32 +33,12 @@ const uuid = (() => {
 
 const getProp = (path, obj) => {
     if (!obj) return obj;
-
     const frags = path.split('.');
-
-    if (frags.length === 1)
-        console.log('Fraggles', obj, path)
-
     obj = obj[frags.splice(0, 1)];
-    if (frags.length > 0) {
+    if (frags.length > 0) 
         return getProp(frags.join('.'), obj);
-    }
-    console.log('eat this', obj)
-
     return obj;
-}
-
-
-const a = {
-    b: {
-        name: 'Hellou'
-    }
-}
-
-console.log(getProp('b.name', a))
-console.log(getProp('name', a.b))
-
-
+};
 
 
 export function collection(data_, {
@@ -71,25 +51,21 @@ export function collection(data_, {
 
     const handler = {
         apply: function (obj) {
-            console.log('apply', obj())
             return obj()
         },
         get: function (target, prop, receiver) {
             //   
             if (prop in relations) {
-                console.log('ggg', relations, prop, relations[prop])
                 return relations[prop].resolve(target());
             } else {
-                console.log('get', target(), prop, receiver)
                 return Reflect.get(target(), prop, receiver);
             }
         },
         set: function (target, prop, value) {
-            //   console.log(target, prop, value);
             relations[prop].establish(target(), value);
             return true;
         },
-        ownKeys: (target)=>Object.keys(target())
+        ownKeys: (target) => Object.keys(target())
     };
 
     const proxyObject = obj =>
@@ -111,10 +87,9 @@ export function collection(data_, {
     const propertyOf = property => element => getProp(property, element);// element[property];
 
     const propertyEquals = (property, value) => element =>
-        use(propertyOf(property), prop => {
-            console.log('deep inside: ', property, element,value)
-            return prop(element) === value;
-        })
+        use(propertyOf(property), prop =>
+            prop(element) === value
+        )
 
     const hasId = element => !!idOf(element);
     const hasProperty = property => element => property in element;
@@ -204,13 +179,8 @@ export function relation(name, collection) {
 };
 
 export function relation_ZERO_TO_N(name, collection) {
-
-    console.log('creating ', name, 'for', collection.data_)
-
     return {
         resolve: (obj, key) => {
-            // wasBornIn Curacao collection=users
-            console.log('resolve', name, obj, collection.data_, collection.idOf(obj))
             return collection.filterByProperty(name, collection.idOf(obj));
         },
         establish: (obj, value) => obj[name] = value,
