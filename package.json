@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "mithril": "^2.0.3",
+    "tagl-mithril": "^1.0.4"
+  }
+}
